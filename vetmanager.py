@@ -2,7 +2,23 @@ import html
 import requests
 from datetime import datetime
 
-from config import API_KEY, VETMANAGER_URL
+from config import API_KEY, COLOR_MODE, VETMANAGER_URL
+from formatting import colorize, get_status
+
+
+def _format_result_value(value, reference, flag):
+    escaped_value = html.escape(str(value))
+    status = get_status(value, reference, flag)
+
+    if COLOR_MODE == "html":
+        return colorize(escaped_value, status)
+
+    if status == "high":
+        return f"{escaped_value} ↑"
+    if status == "low":
+        return f"{escaped_value} ↓"
+    return escaped_value
+
 
 def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
     """
@@ -185,12 +201,18 @@ def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_
             reference = ""
             flag = ""
 
+        formatted_value = _format_result_value(
+            value,
+            reference,
+            flag
+        )
+
         if device_name == "Getein GN 7000 (PCR)":
 
             html_table.append(
                 "<tr>"
                 f"<td>{html.escape(str(name))}</td>"
-                f"<td>{html.escape(str(value))}</td>"
+                f"<td>{formatted_value}</td>"
                 f"<td>{html.escape(str(unit))}</td>"
                 f"<td>{html.escape(str(reference))}</td>"
                 "</tr>"
@@ -201,7 +223,7 @@ def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_
             html_table.append(
                 "<tr>"
                 f"<td>{html.escape(str(name))}</td>"
-                f"<td>{html.escape(str(value))}</td>"
+                f"<td>{formatted_value}</td>"
                 f"<td>{html.escape(str(unit))}</td>"
                 f"<td>{html.escape(str(reference))}</td>"
                 f"<td>{html.escape(str(flag))}</td>"
