@@ -3,13 +3,19 @@ import requests
 from datetime import datetime
 
 from config import API_KEY, VETMANAGER_URL
-from formatting import colorize, get_status
+from formatting import colorize, get_status, get_status_style
 
 
-def _format_result_value(value, reference, flag):
+def _format_result_value(value, status):
     escaped_value = html.escape(str(value))
-    status = get_status(value, reference, flag)
     return colorize(escaped_value, status)
+
+
+def _format_result_row_start(status):
+    style = get_status_style(status)
+    if style:
+        return f'<tr style="{style}">'
+    return "<tr>"
 
 
 def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
@@ -193,33 +199,31 @@ def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_
             reference = ""
             flag = ""
 
-        formatted_value = _format_result_value(
-            value,
-            reference,
-            flag
-        )
+        status = get_status(value, reference, flag)
+        row_start = _format_result_row_start(status)
+        formatted_value = _format_result_value(value, status)
 
         if device_name == "Getein GN 7000 (PCR)":
 
             html_table.append(
-                "<tr>"
-                f"<td>{html.escape(str(name))}</td>"
-                f"<td>{formatted_value}</td>"
-                f"<td>{html.escape(str(unit))}</td>"
-                f"<td>{html.escape(str(reference))}</td>"
-                "</tr>"
+                row_start
+                + f"<td>{html.escape(str(name))}</td>"
+                + f"<td>{formatted_value}</td>"
+                + f"<td>{html.escape(str(unit))}</td>"
+                + f"<td>{html.escape(str(reference))}</td>"
+                + "</tr>"
             )
 
         else:
 
             html_table.append(
-                "<tr>"
-                f"<td>{html.escape(str(name))}</td>"
-                f"<td>{formatted_value}</td>"
-                f"<td>{html.escape(str(unit))}</td>"
-                f"<td>{html.escape(str(reference))}</td>"
-                f"<td>{html.escape(str(flag))}</td>"
-                "</tr>"
+                row_start
+                + f"<td>{html.escape(str(name))}</td>"
+                + f"<td>{formatted_value}</td>"
+                + f"<td>{html.escape(str(unit))}</td>"
+                + f"<td>{html.escape(str(reference))}</td>"
+                + f"<td>{html.escape(str(flag))}</td>"
+                + "</tr>"
             )
 
     html_table.append("</table>")

@@ -45,15 +45,18 @@ def get_status(value, ref_range, flag):
     return None
 
 
-def colorize(value, status):
+def get_status_style(status):
     if status == "high":
-        return (
-            '<span style="color:#d32f2f;font-weight:bold">'
-            f"{value}</span>"
-        )
+        return "color:#d32f2f;font-weight:bold"
     if status == "low":
+        return "color:#1976d2;font-weight:bold"
+    return ""
+
+
+def colorize(value, status):
+    style = get_status_style(status)
+    if style:
         return (
-            '<span style="color:#1976d2;font-weight:bold">'
-            f"{value}</span>"
+            f'<span style="{style}">{value}</span>'
         )
     return value

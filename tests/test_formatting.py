@@ -215,5 +215,24 @@ def test_result_value_formatting_always_uses_html(
     monkeypatch.setenv("API_KEY", "test-key")
     import vetmanager
 
-    actual = vetmanager._format_result_value(value, reference, flag)
+    from formatting import get_status
+
+    status = get_status(value, reference, flag)
+    actual = vetmanager._format_result_value(value, status)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        ("high", '<tr style="color:#d32f2f;font-weight:bold">'),
+        ("low", '<tr style="color:#1976d2;font-weight:bold">'),
+        (None, "<tr>"),
+    ],
+)
+def test_result_row_uses_status_color(status, expected, monkeypatch):
+    monkeypatch.setenv("VETMANAGER_URL", "https://vetmanager.invalid")
+    monkeypatch.setenv("API_KEY", "test-key")
+    import vetmanager
+
+    assert vetmanager._format_result_row_start(status) == expected
