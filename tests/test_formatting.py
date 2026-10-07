@@ -109,6 +109,62 @@ def test_hl7_result_fields_are_passed_to_stubbed_sender(
 
 
 @pytest.mark.parametrize(
+    ("device_name", "reported_name", "expected_name"),
+    [
+        (
+            device_name,
+            reported_name,
+            expected_name,
+        )
+        for device_name in ("Ozelle EHVT-75", "Ozelle Vet BHA-5000")
+        for reported_name, expected_name in (
+            ("Complete Blood Count", "Общий анализ крови"),
+            ("Fecal Occult Blood Test", "Анализ кала на скрытую кровь"),
+            ("Some new analysis", "Some new analysis"),
+        )
+    ] + [
+        (device_name, "", "МФВА")
+        for device_name in ("Ozelle EHVT-75", "Ozelle Vet BHA-5000")
+    ],
+)
+def test_ozelle_analysis_title_uses_reported_name_and_fallback(
+    hl7_module,
+    monkeypatch,
+    device_name,
+    reported_name,
+    expected_name,
+):
+    sent = {}
+
+    def stub_send_results_direct_to_medical_card(**kwargs):
+        sent.update(kwargs)
+        return True
+
+    monkeypatch.setattr(
+        hl7_module,
+        "send_results_direct_to_medical_card",
+        stub_send_results_direct_to_medical_card
+    )
+
+    obr_name = (
+        "OBR|1|||"
+        if not reported_name
+        else f"OBR|1|||BHA^{reported_name}"
+    )
+    message = (
+        f"PV1|||||123\r"
+        f"{obr_name}\r"
+        "OBX|1|NM|WBC||18.2|10^9/L|4.0-15.0|H"
+    )
+    assert hl7_module.process_hl7_message(
+        message,
+        {"name": device_name, "lab_code": "МФВА"}
+    )
+
+    assert sent["lab_code"] == expected_name
+
+
+@pytest.mark.parametrize(
     ("value", "reference", "flag", "mode", "expected"),
     [
         (

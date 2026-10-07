@@ -285,13 +285,19 @@ def process_hl7_message(
     # VETMANAGER
     # ============================================================
 
-    if device_info["name"] == "Ozelle Vet BHA-5000":
-        analysis_name = extract_analysis_name_from_obr(raw_text)
-
+    if device_info.get("name") in {
+        "Ozelle Vet BHA-5000",
+        "Ozelle EHVT-75",
+    }:
+        analysis_name = (
+            extract_analysis_name_from_obr(raw_text)
+            or device_info.get("lab_code")
+            or ""
+        )
         analysis_name = BHA_ANALYSIS_NAMES.get(
-        analysis_name,
-        analysis_name
-    )
+            analysis_name,
+            analysis_name
+        )
     else:
         analysis_name = device_info["lab_code"]
 
