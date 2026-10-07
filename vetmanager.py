@@ -1,9 +1,43 @@
 import html
+import json
 import requests
 from datetime import datetime
+from pathlib import Path
 
 from config import API_KEY, VETMANAGER_URL
 from formatting import colorize, get_status, get_status_style
+
+
+TRANSFER_LOG_DIR = Path(__file__).resolve().parent / "logs"
+
+
+def _write_transfer_log(
+    event,
+    card_id,
+    device_name,
+    lab_code,
+    results_pack,
+    outcome=None,
+):
+    timestamp = datetime.now()
+    log_path = TRANSFER_LOG_DIR / f"vetmanager_{timestamp:%Y-%m-%d}.log"
+    entry = {
+        "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+        "event": event,
+        "card_id": card_id,
+        "device": device_name,
+        "analysis": lab_code,
+        #"results": results_pack,
+    }
+    if outcome is not None:
+        entry["outcome"] = outcome
+
+    try:
+        TRANSFER_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a", encoding="utf-8") as log_file:
+            log_file.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+    except OSError as error:
+        print(f"❌ [Ветменеджер] Не удалось записать лог: {error}")
 
 
 def _format_result_value(value, status):
@@ -19,6 +53,33 @@ def _format_result_row_start(status):
 
 
 def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
+    """Send results to VetManager and record the result and transfer outcome."""
+    _write_transfer_log(
+        "Получены результаты",
+        card_id,
+        device_name,
+        lab_code,
+        results_pack,
+    )
+
+    success = _send_results_direct_to_medical_card(
+        card_id,
+        device_name,
+        lab_code,
+        results_pack,
+    )
+    _write_transfer_log(
+        "Результат передачи",
+        card_id,
+        device_name,
+        lab_code,
+        results_pack,
+        outcome="успешно" if success else "неудачно",
+    )
+    return success
+
+
+def _send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
     """
     Отправляет результаты анализа напрямую в медицинскую карту VetManager
     и подробно логирует GET/PUT ответы для диагностики.
