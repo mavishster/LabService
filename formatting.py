@@ -1,10 +1,12 @@
 import re
 
 
+_NUMBER_PATTERN = r"[-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][-+]?\d+)?"
 _RANGE_PATTERN = re.compile(
-    r"^\s*([-+]?\d+(?:[.,]\d+)?)\s*[-–]\s*"
-    r"([-+]?\d+(?:[.,]\d+)?)\s*$"
+    rf"^\s*({_NUMBER_PATTERN})\s*[-–]\s*"
+    rf"({_NUMBER_PATTERN})(?:\s+.*)?\s*$"
 )
+_VALUE_PATTERN = re.compile(rf"^\s*({_NUMBER_PATTERN})")
 
 
 def parse_range(ref):
@@ -30,10 +32,11 @@ def get_status(value, ref_range, flag):
     if low is None or high is None:
         return None
 
-    try:
-        numeric_value = float(str(value).strip().replace(",", "."))
-    except ValueError:
+    match = _VALUE_PATTERN.match(str(value or ""))
+    if not match:
         return None
+
+    numeric_value = float(match.group(1).replace(",", "."))
 
     if numeric_value > high:
         return "high"

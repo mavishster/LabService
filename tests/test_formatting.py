@@ -43,6 +43,19 @@ def test_get_status_uses_numeric_comparison_with_comma_decimal():
     assert get_status("15,1", "4,0-15,0", "") == "high"
 
 
+@pytest.mark.parametrize(
+    ("value", "reference", "expected"),
+    [
+        ("9.5 10^9/L", "4.0-10.2 10^9/L", None),
+        ("10,3 10^9/L", "4,0-10,2 10^9/L", "high"),
+        ("3.9 10^9/L", "4.0-10.2", "low"),
+        ("9.5", "4.0-10.2 10^9/L", None),
+    ],
+)
+def test_status_parses_numeric_values_with_units(value, reference, expected):
+    assert get_status(value, reference, "") == expected
+
+
 def test_qualitative_value_without_flag_has_no_status():
     assert get_status("Positive", "4-15", "") is None
 
@@ -165,26 +178,36 @@ def test_ozelle_analysis_title_uses_reported_name_and_fallback(
 
 
 @pytest.mark.parametrize(
-    ("value", "reference", "flag", "mode", "expected"),
+    ("value", "reference", "flag", "expected"),
     [
         (
             "18.2",
             "4.0-15.0",
             "",
-            "html",
             '<span style="color:#d32f2f;font-weight:bold">'
             "18.2</span>"
         ),
-        ("18.2", "4.0-15.0", "", "text", "18.2 ↑"),
-        ("3.1", "5.5-8.5", "", "text", "3.1 ↓"),
-        ("12", "8-15", "", "text", "12"),
+        (
+            "3.1",
+            "5.5-8.5",
+            "",
+            '<span style="color:#1976d2;font-weight:bold">'
+            "3.1</span>"
+        ),
+        (
+            "10,3 10^9/L",
+            "4,0-10,2 10^9/L",
+            "",
+            '<span style="color:#d32f2f;font-weight:bold">'
+            "10,3 10^9/L</span>"
+        ),
+        ("12", "8-15", "", "12"),
     ],
 )
-def test_result_value_formatting_modes(
+def test_result_value_formatting_always_uses_html(
     value,
     reference,
     flag,
-    mode,
     expected,
     monkeypatch
 ):
@@ -192,6 +215,5 @@ def test_result_value_formatting_modes(
     monkeypatch.setenv("API_KEY", "test-key")
     import vetmanager
 
-    monkeypatch.setattr(vetmanager, "COLOR_MODE", mode)
     actual = vetmanager._format_result_value(value, reference, flag)
     assert actual == expected

@@ -6,10 +6,6 @@ load_dotenv()
 VETMANAGER_URL = os.environ["VETMANAGER_URL"]
 API_KEY = os.environ["API_KEY"]
 SERVICE_NAME = os.getenv("SERVICE_NAME", "Getein_Lab")
-COLOR_MODE = os.getenv("COLOR_MODE", "text").strip().lower()
-
-if COLOR_MODE not in {"html", "text"}:
-    raise ValueError("COLOR_MODE must be either 'html' or 'text'")
 
 # ================================================================
 # КОНФИГУРАЦИЯ ПОРТОВ

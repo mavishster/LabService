@@ -2,22 +2,14 @@ import html
 import requests
 from datetime import datetime
 
-from config import API_KEY, COLOR_MODE, VETMANAGER_URL
+from config import API_KEY, VETMANAGER_URL
 from formatting import colorize, get_status
 
 
 def _format_result_value(value, reference, flag):
     escaped_value = html.escape(str(value))
     status = get_status(value, reference, flag)
-
-    if COLOR_MODE == "html":
-        return colorize(escaped_value, status)
-
-    if status == "high":
-        return f"{escaped_value} ↑"
-    if status == "low":
-        return f"{escaped_value} ↓"
-    return escaped_value
+    return colorize(escaped_value, status)
 
 
 def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
