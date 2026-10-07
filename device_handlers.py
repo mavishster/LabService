@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+from config import pcr_names_ru, translate
 from hl7 import process_hl7_message
 from vetmanager import send_results_direct_to_medical_card
 
@@ -331,9 +332,14 @@ def handle_getein_7000_data(
 
                     result = "Positive"
 
+                name = translate(
+                    test_code,
+                    pcr_names_ru
+                )
+
                 print(
                     f"\n   🧪 [GETEIN 7000] "
-                    f"{test_code}"
+                    f"{name}"
                 )
 
                 print(
@@ -345,7 +351,7 @@ def handle_getein_7000_data(
                 )
 
                 results_pack.append({
-                    "name": test_code,
+                    "name": name,
                     "value": result,
                     "unit": f"CT {ct:.1f}",
                     "reference": ">38 = Negative",
