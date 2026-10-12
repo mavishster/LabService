@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 from config import BHA_ANALYSIS_NAMES, test_names_ru
@@ -315,7 +316,15 @@ def process_hl7_message(
         card_id=card_id,
         device_name=device_info["name"],
         lab_code=analysis_name,
-        results_pack=results_pack
+        results_pack=results_pack,
+        source_message_id=(
+            hashlib.sha256("\r".join(lines).encode("utf-8")).hexdigest()
+            if device_info.get("name") in {
+                "Ozelle Vet BHA-5000",
+                "Ozelle EHVT-75",
+            }
+            else None
+        ),
     )
 
     if success:

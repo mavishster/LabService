@@ -52,7 +52,13 @@ def _format_result_row_start(status):
     return "<tr>"
 
 
-def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
+def send_results_direct_to_medical_card(
+    card_id,
+    device_name,
+    lab_code,
+    results_pack,
+    source_message_id=None,
+):
     """Send results to VetManager and record the result and transfer outcome."""
     _write_transfer_log(
         "Получены результаты",
@@ -67,6 +73,7 @@ def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_
         device_name,
         lab_code,
         results_pack,
+        source_message_id,
     )
     _write_transfer_log(
         "Результат передачи",
@@ -79,7 +86,13 @@ def send_results_direct_to_medical_card(card_id, device_name, lab_code, results_
     return success
 
 
-def _send_results_direct_to_medical_card(card_id, device_name, lab_code, results_pack):
+def _send_results_direct_to_medical_card(
+    card_id,
+    device_name,
+    lab_code,
+    results_pack,
+    source_message_id=None,
+):
     """
     Отправляет результаты анализа напрямую в медицинскую карту VetManager
     и подробно логирует GET/PUT ответы для диагностики.
@@ -181,6 +194,18 @@ def _send_results_direct_to_medical_card(card_id, device_name, lab_code, results
     clinic_id = medical_card.get("clinic_id")
 
     current_description = medical_card.get("description") or ""
+
+    source_marker = (
+        f"<!-- LabService HL7 source: {source_message_id} -->"
+        if source_message_id
+        else ""
+    )
+    if source_marker and source_marker in current_description:
+        print(
+            "ℹ️ [Ветменеджер] "
+            "Повторное HL7-сообщение уже сохранено — пропускаем."
+        )
+        return True
 
     print()
     print(f"👤 patient_id: {patient_id}")
@@ -303,6 +328,7 @@ def _send_results_direct_to_medical_card(card_id, device_name, lab_code, results
     new_description = (
         current_description
         + "<br>"
+        + source_marker
         + html_table
     )
 
