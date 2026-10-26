@@ -190,7 +190,7 @@ def test_noahcali_unframed_hl7_is_processed_and_sent(
 
     assert sent["card_id"] == "123"
     assert sent["device_name"] == "Lockmedt Biochemistry Analyzer"
-    assert sent["lab_code"] == "Noahcali_100"
+    assert sent["lab_code"] == "Биохимический анализ крови"
     assert sent["results_pack"] == [
         {
             "name": "ALB",

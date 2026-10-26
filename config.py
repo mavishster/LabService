@@ -35,7 +35,7 @@ DEVICES_CONFIG = {
     },
     5006: {
         "name": "Lockmedt Biochemistry Analyzer",
-        "lab_code": "Noahcali_100",
+        "lab_code": "Биохимический анализ крови",
         "unframed_hl7": True,
     },
 }
