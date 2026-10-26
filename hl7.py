@@ -8,10 +8,10 @@ def extract_hl7_results(lines):
     """
     Извлекает результаты из OBX-сегментов HL7.
 
-    Логика названия показателя:
-    1. Сначала используется OBX-3 через test_names_ru.
-    2. Если для OBX-3 нет русского названия,
-       используется OBX-4.
+    Приоритет названия показателя:
+    1. Русский перевод OBX-3.
+    2. Английское название из OBX-3.
+    3. OBX-4, затем код OBX-3.
     """
 
     results_pack = []
@@ -30,24 +30,24 @@ def extract_hl7_results(lines):
             continue
 
         # OBX-3 — код показателя
-        t_name_code = (
-            parts[3]
-            .split("^")[0]
-            .strip()
-        )
+        observation = parts[3].split("^")
+        t_name_code = observation[0].strip()
 
         # Сначала ищем русское название по коду
         t_name = test_names_ru.get(
             t_name_code
         )
 
-        # Если кода нет в словаре — берем OBX-4
+        # OBX-3.2 contains the reported (usually English) test name.
         if not t_name:
-            t_name = (
-                parts[4].strip()
-                if len(parts) > 4
-                else ""
-            )
+            t_name = observation[1].strip() if len(observation) > 1 else ""
+
+        # Keep compatibility with messages that put the name in OBX-4.
+        if not t_name and len(parts) > 4:
+            t_name = parts[4].strip()
+
+        if not t_name:
+            t_name = t_name_code
 
         # OBX-5 — результат
         r_val = parts[5].strip()

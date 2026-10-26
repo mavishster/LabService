@@ -122,6 +122,28 @@ def test_hl7_result_fields_are_passed_to_stubbed_sender(
 
 
 @pytest.mark.parametrize(
+    ("observation", "sub_id", "expected_name"),
+    [
+        ("WBC^White blood cells^LN", "", "Лейкоциты (WBC)"),
+        ("NEW_CODE^English test name^L", "", "English test name"),
+        ("NEW_CODE^^L", "Legacy test name", "Legacy test name"),
+        ("NEW_CODE^^L", "", "NEW_CODE"),
+    ],
+)
+def test_hl7_result_name_uses_translation_then_reported_name(
+    hl7_module,
+    observation,
+    sub_id,
+    expected_name,
+):
+    result = hl7_module.extract_hl7_results(
+        [f"OBX|1|NM|{observation}|{sub_id}|18.2|10^9/L|4.0-15.0|H"]
+    )
+
+    assert result[0]["name"] == expected_name
+
+
+@pytest.mark.parametrize(
     ("device_name", "reported_name", "expected_name"),
     [
         (

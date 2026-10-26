@@ -33,6 +33,10 @@ DEVICES_CONFIG = {
         "name": "Ozelle EHVT-75",
         "lab_code": "МФВА"
     },
+        5006: {
+        "name": "Lockmedt Biochemistry Analyzer",
+        "lab_code": "Noahcali_100"
+    },
 }
 
 
@@ -142,4 +146,6 @@ pcr_names_ru = {
 BHA_ANALYSIS_NAMES = {
     "Fecal Occult Blood Test": "Анализ кала на скрытую кровь",
     "Complete Blood Count": "Общий анализ крови",
+    "Fecal Microbial Analysis": "Общий анализ кала_",
+    "Faecal Microbial Analysis": "Общий анализ кала",
 }
