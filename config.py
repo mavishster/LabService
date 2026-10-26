@@ -33,9 +33,10 @@ DEVICES_CONFIG = {
         "name": "Ozelle EHVT-75",
         "lab_code": "МФВА"
     },
-        5006: {
+    5006: {
         "name": "Lockmedt Biochemistry Analyzer",
-        "lab_code": "Noahcali_100"
+        "lab_code": "Noahcali_100",
+        "unframed_hl7": True,
     },
 }
 

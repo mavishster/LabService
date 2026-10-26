@@ -718,6 +718,35 @@ def handle_device_data(
                         "Ждём продолжение."
                     )
 
+        if (
+            buffer
+            and device_info.get("unframed_hl7")
+            and b"\x1c" not in buffer
+            and b"MSH|" in buffer
+        ):
+            raw_text = buffer.decode(
+                "utf-8",
+                errors="ignore"
+            )
+
+            print(
+                f"📨 [HL7] Обрабатываем сообщение без MLLP "
+                f"после закрытия соединения ({len(buffer)} байт)"
+            )
+
+            success = process_hl7_message(
+                raw_text,
+                device_info
+            )
+
+            if success:
+                print("✅ [HL7] Сообщение успешно обработано.")
+            else:
+                print(
+                    "⚠️ [HL7] Сообщение обработано, "
+                    "но результаты не были отправлены."
+                )
+
     except Exception as e:
 
         print(

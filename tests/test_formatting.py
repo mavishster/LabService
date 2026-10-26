@@ -143,6 +143,79 @@ def test_hl7_result_name_uses_translation_then_reported_name(
     assert result[0]["name"] == expected_name
 
 
+def test_noahcali_unframed_hl7_is_processed_and_sent(
+    hl7_module,
+    monkeypatch,
+):
+    import device_handlers
+    from config import DEVICES_CONFIG
+
+    message = (
+        "MSH|^~\\&|locmedt|Noahcali_100|||20261026102615||ORU^R01||P|2.3.1\r\n"
+        "PID||123|1||Sample||456|M\r\n"
+        "OBR||||NC0000000001|||20261024095024\r\n"
+        "OBX||ST|ALB|ALB|3.6|g/dL|2.2-4.4| |||F|||||||\r\n"
+        "OBX||ST|TP|TP|8.9|g/dL|5.3-8.6|H|||F|||||||\r\n"
+        "OBX||ST|GGT|GGT|<=5|U/L|<=10| |||F|||||||\r\n"
+    )
+    sent = {}
+
+    def stub_send_results_direct_to_medical_card(**kwargs):
+        sent.update(kwargs)
+        return True
+
+    class UnframedHL7Socket:
+        def __init__(self):
+            self.chunks = [message.encode("utf-8"), b""]
+
+        def recv(self, _):
+            return self.chunks.pop(0)
+
+        def sendall(self, _):
+            pass
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(
+        hl7_module,
+        "send_results_direct_to_medical_card",
+        stub_send_results_direct_to_medical_card,
+    )
+
+    device_handlers.handle_device_data(
+        UnframedHL7Socket(),
+        DEVICES_CONFIG[5006],
+    )
+
+    assert sent["card_id"] == "123"
+    assert sent["device_name"] == "Lockmedt Biochemistry Analyzer"
+    assert sent["lab_code"] == "Noahcali_100"
+    assert sent["results_pack"] == [
+        {
+            "name": "ALB",
+            "value": "3.6",
+            "unit": "g/dL",
+            "reference": "2.2-4.4",
+            "flag": "",
+        },
+        {
+            "name": "TP",
+            "value": "8.9",
+            "unit": "g/dL",
+            "reference": "5.3-8.6",
+            "flag": "H",
+        },
+        {
+            "name": "GGT",
+            "value": "<=5",
+            "unit": "U/L",
+            "reference": "<=10",
+            "flag": "",
+        },
+    ]
+
+
 @pytest.mark.parametrize(
     ("device_name", "reported_name", "expected_name"),
     [
