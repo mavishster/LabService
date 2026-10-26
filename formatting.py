@@ -21,12 +21,29 @@ def parse_range(ref):
     return low, high
 
 
+_FLAG_MAP = {
+    "H": "high",
+    "HH": "high",
+    "HIGH": "high",
+    "L": "low",
+    "LL": "low",
+    "LOW": "low",
+    "N": "normal",
+    "NORMAL": "normal",
+    "NORMAL RANGE": "normal",
+    "NR": "normal",
+    "OK": "normal",
+}
+
+
+def _normalize_flag(flag):
+    return str(flag or "").strip().upper().replace(" ", " ")
+
+
 def get_status(value, ref_range, flag):
-    normalized_flag = str(flag or "").strip().upper()
-    if normalized_flag in {"H", "HH"}:
-        return "high"
-    if normalized_flag in {"L", "LL"}:
-        return "low"
+    normalized_flag = _normalize_flag(flag)
+    if normalized_flag in _FLAG_MAP:
+        return _FLAG_MAP[normalized_flag]
 
     low, high = parse_range(ref_range)
     if low is None or high is None:
@@ -50,6 +67,8 @@ def get_status_style(status):
         return "color:#d32f2f;font-weight:bold"
     if status == "low":
         return "color:#1976d2;font-weight:bold"
+    if status == "normal":
+        return "color:#000000;font-weight:bold"
     return ""
 
 

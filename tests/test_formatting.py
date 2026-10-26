@@ -33,6 +33,8 @@ def test_parse_range_accepts_spaces_en_dash_and_comma_decimals():
         ("3", "4-15", "HH", "high"),
         ("16", "4-15", "L", "low"),
         ("16", "4-15", "LL", "low"),
+        ("10", "4-15", "N", "normal"),
+        ("10", "4-15", "normal", "normal"),
     ],
 )
 def test_device_flag_takes_priority(value, reference, flag, expected):
@@ -143,6 +145,21 @@ def test_hl7_result_name_uses_translation_then_reported_name(
     assert result[0]["name"] == expected_name
 
 
+def test_biochemistry_codes_keep_russian_names_and_flags(hl7_module):
+    result = hl7_module.extract_hl7_results([
+        "OBX|1|NM|GGT||<=5|U/L|<=10|L",
+        "OBX|2|NM|GLU||157|mg/dL|81-155|H",
+        "OBX|3|NM|Na+||130|mmol/L|140-164|L",
+    ])
+
+    assert result[0]["name"] == "Гамма-глутамилтранспептидаза / GGT (GGT)"
+    assert result[0]["flag"] == "L"
+    assert result[1]["name"] == "Глюкоза (GLU)"
+    assert result[1]["flag"] == "H"
+    assert result[2]["name"] == "Натрий / Na+ (Na+)"
+    assert result[2]["flag"] == "L"
+
+
 def test_noahcali_unframed_hl7_is_processed_and_sent(
     hl7_module,
     monkeypatch,
@@ -193,21 +210,21 @@ def test_noahcali_unframed_hl7_is_processed_and_sent(
     assert sent["lab_code"] == "Биохимический анализ крови"
     assert sent["results_pack"] == [
         {
-            "name": "ALB",
+            "name": "Альбумин (ALB)",
             "value": "3.6",
             "unit": "g/dL",
             "reference": "2.2-4.4",
             "flag": "",
         },
         {
-            "name": "TP",
+            "name": "Общий белок (TP)",
             "value": "8.9",
             "unit": "g/dL",
             "reference": "5.3-8.6",
             "flag": "H",
         },
         {
-            "name": "GGT",
+            "name": "Гамма-глутамилтранспептидаза / GGT (GGT)",
             "value": "<=5",
             "unit": "U/L",
             "reference": "<=10",
@@ -322,6 +339,7 @@ def test_result_value_formatting_always_uses_html(
     [
         ("high", '<tr style="color:#d32f2f;font-weight:bold">'),
         ("low", '<tr style="color:#1976d2;font-weight:bold">'),
+        ("normal", '<tr style="color:#000000;font-weight:bold">'),
         (None, "<tr>"),
     ],
 )
