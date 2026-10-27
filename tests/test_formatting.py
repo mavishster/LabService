@@ -160,6 +160,41 @@ def test_biochemistry_codes_keep_russian_names_and_flags(hl7_module):
     assert result[2]["flag"] == "L"
 
 
+@pytest.mark.parametrize(
+    ("code", "expected_name"),
+    [
+        ("CHE", "Холинэстераза (CHE)"),
+        ("TBA", "Общие желчные кислоты (TBA)"),
+        ("DBIL", "Прямой билирубин (DBIL)"),
+        ("IBIL", "Непрямой билирубин (IBIL)"),
+        ("UA", "Мочевая кислота (UA)"),
+        ("Ca*P", "Кальций-фосфорное произведение (Ca*P)"),
+        ("α-HBDH", "α-гидроксибутиратдегидрогеназа (α-HBDH)"),
+        ("α-HBDH/LDH", "Соотношение α-HBDH/LDH"),
+        ("FRUC", "Фруктозамин (FRUC)"),
+        ("TG", "Триглицериды (TG)"),
+        ("HDL-C", "Холестерин липопротеинов высокой плотности (HDL-C)"),
+        ("LDL-C", "Холестерин липопротеинов низкой плотности (LDL-C)"),
+        ("Cl-", "Хлориды (Cl-)"),
+        ("Mg2+", "Магний (Mg2+)"),
+        ("Osm", "Осмоляльность (Osm)"),
+        ("AG", "Анионный интервал (AG)"),
+        ("LAC", "Лактат (LAC)"),
+        ("LPS", "Липаза (LPS)"),
+    ],
+)
+def test_lockmedt_biochemistry_codes_have_russian_names(
+    hl7_module,
+    code,
+    expected_name,
+):
+    result = hl7_module.extract_hl7_results(
+        [f"OBX|1|NM|{code}||1|unit|0-2|"]
+    )
+
+    assert result[0]["name"] == expected_name
+
+
 def test_noahcali_unframed_hl7_is_processed_and_sent(
     hl7_module,
     monkeypatch,
